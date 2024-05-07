@@ -1,7 +1,7 @@
 const { Schema, model } = require("mongoose");
 const bcrypt = require("bcrypt");
 
-const adminSchema = new Schema(
+const voterSchema = new Schema(
   {
     email: {
       type: String,
@@ -10,12 +10,8 @@ const adminSchema = new Schema(
       trim: true,
       lowerCase: true,
     },
-    accountDetails: {
-      name: { type: String, required: true },
-      number: { type: String, required: true },
-      bank: { type: String, required: true },
-    },
-    votingRooms: [{ type: Schema.Types.ObjectId, ref: "VotingRoom" }],
+
+    votedIn: [{ type: mongoose.Schema.Types.ObjectId, ref: "VotingRoom" }],
 
     password: {
       type: String,
@@ -35,12 +31,12 @@ const adminSchema = new Schema(
   { timestamps: true }
 );
 
-adminSchema.pre("save", async function (next) {
+voterSchema.pre("save", async function (next) {
   if (!this.isModified("password")) return next();
   const salt = await bcrypt.genSalt(10);
   this.password = await bcrypt.hash(this.password, salt);
 });
 
-const Admin = model("Admin", adminSchema);
+const Voter = model("Voter", voterSchema);
 
-module.exports = Admin;
+module.exports = Voter;
