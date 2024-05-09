@@ -10,11 +10,11 @@ const adminSchema = new Schema(
       trim: true,
       lowerCase: true,
     },
-    accountDetails: {
-      name: { type: String, required: true },
-      number: { type: String, required: true },
-      bank: { type: String, required: true },
-    },
+
+    accountName: { type: String, required: true },
+    accountNumber: { type: String, required: true },
+    accountBank: { type: String, required: true },
+
     votingRooms: [{ type: Schema.Types.ObjectId, ref: "VotingRoom" }],
 
     password: {
