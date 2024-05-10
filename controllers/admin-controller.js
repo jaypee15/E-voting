@@ -140,7 +140,7 @@ const updateUser = asyncHandler(async (req, res, next) => {
 
 // Delete an user
 const deleteUser = async (req, res, next) => {
-  const {userId} = req.params;
+  const { userId } = req.params;
 
   const loggedInUserId = req.user.userId;
   if (loggedInUserId !== userId) {
@@ -194,15 +194,15 @@ const updatePassword = async (req, res, next) => {
 };
 
 const forgotPassword = async (req, res, next) => {
-  const userID = req.params.userID;
-  const loggedInUserId = req.user.userID;
-  if (loggedInUserId !== userID) {
+  const { userId } = req.params;
+  const loggedInUserId = req.user.userId;
+  if (loggedInUserId !== userId) {
     return next(
       new ErrorObject("You are not allowed to access this route", 401)
     );
   }
 
-  const user = await User.findById(userID);
+  const user = await Admin.findById(userId);
   if (!user) {
     return next(new ErrorObject("user not found", 404));
   }
@@ -233,7 +233,7 @@ const forgotPassword = async (req, res, next) => {
 const resetPassword = async (req, res, next) => {
   const { email, token, newPassword } = req.body;
 
-  const user = await User.findOne({ email });
+  const user = await Admin.findOne({ email });
   if (!user) {
     return next(new ErrorObject("user not found", 404));
   }
