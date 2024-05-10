@@ -2,16 +2,28 @@ const { Schema, model } = require("mongoose");
 
 const votingRoomSchema = new Schema(
   {
-    name: { type: String, required: true },
+    name: { type: String, required: true, trim: true, unique: true, minLength: 5, maxLength:30 },
     admin: {
       type: Schema.Types.ObjectId,
       ref: "Admin",
       required: true,
     },
-    contestants: [{ type: mongoose.Schema.Types.ObjectId, ref: "Contestant" }],
-    startDate: { type: Date, required: true },
-    endDate: { type: Date, required: true },
-    votingLink: { type: String, required: true, unique: true },
+    contestants: [
+      {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: "Contestant",
+        required: true,
+      },
+    ],
+    startDate: { type: Date, required: true, trim: true },
+    endDate: { type: Date, required: true, trim: true },
+    votingLink: {
+      type: String,
+      required: true,
+      unique: true,
+      lowercase: true,
+      trim: true,
+    },
   },
   { timestamps: true }
 );

@@ -1,7 +1,7 @@
 // Verify if the user is authenticated before allowing access to certain routes
 
 const jwt = require("jsonwebtoken");
-const asyncHandler = require("expressAsyncHandler");
+const asyncHandler = require("express-async-handler");
 const ErrorObject = require("../utils/error");
 
 const { SECRET } = process.env;
@@ -10,7 +10,7 @@ const protect = asyncHandler(async (req, res, next) => {
   const token = req.headers.authorization?.split(" ")[1];
 
   if (!token) {
-    next(new ErrorObject("Unauthorized: No token provided", 401));
+    return next(new ErrorObject("Unauthorized: No token provided", 401));
   }
 
   try {

@@ -4,19 +4,20 @@ const jwt = require("jsonwebtoken");
 const bcrypt = require("bcrypt");
 const randomstring = require("randomstring");
 const moment = require("moment");
+const asyncHandler = require("express-async-handler");
 
 const Admin = require("../models/admin");
-const sendEmail = require("../utils/emailService");
-const asyncHandler = require("express-async-handler");
+const sendEmail = require("../utils/email-service");
 const ErrorObject = require("../utils/error");
 
 const { EXPIRES_IN, SECRET } = process.env;
 
 const createUser = asyncHandler(async (req, res, next) => {
   const { email, password, accountName, accountNumber, accountBank } = req.body;
+  
 
   // TODO: make a service
-  const emailAlreadyExists = await Admin.findOne(email);
+  const emailAlreadyExists = await Admin.findOne({email});
   if (emailAlreadyExists) {
     return next(new ErrorObject("A user with this email already exists", 400));
   }
@@ -34,10 +35,21 @@ const createUser = asyncHandler(async (req, res, next) => {
     expiresIn: EXPIRES_IN,
   });
 
-  res.cookie("jwt", token, {
-    expires: new Date(Date.now() + EXPIRES_IN * 1000 * 60 * 60 * 24 * 30),
-    httpOnly: true,
-  });
+  console.log(user)
+
+  const oneDay = 1000 * 60 * 60 * 24;
+  const longerExp = 1000 * 60 * 60 * 24 * 30;
+  
+  try {
+    res.cookie("jwt", token, {
+      expires: new Date(Date.now() + oneDay),
+      httpOnly: true,
+    });
+  } catch (error) {
+    console.error("Error setting cookie:", error);
+    // Handle the error appropriately (e.g., send an error response)
+  }
+
 
   // Construct user response object
   const userResponse = {
@@ -50,7 +62,7 @@ const createUser = asyncHandler(async (req, res, next) => {
   return res.status(201).json({ user: userResponse });
 });
 
-const loginuser = asyncHandler(async (req, res, next) => {
+const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
 
   if (!email || !password) {
@@ -72,10 +84,18 @@ const loginuser = asyncHandler(async (req, res, next) => {
     expiresIn: EXPIRES_IN,
   });
 
-  res.cookie("jwt", token, {
-    expires: new Date(Date.now() + EXPIRES_IN * 1000 * 60 * 60 * 24 * 30),
-    httpOnly: true,
-  });
+  const oneDay = 1000 * 60 * 60 * 24;
+  const longerExp = 1000 * 60 * 60 * 24 * 30;
+  
+  try {
+    res.cookie("jwt", token, {
+      expires: new Date(Date.now() + oneDay),
+      httpOnly: true,
+    });
+  } catch (error) {
+    console.error("Error setting cookie:", error);
+    // Handle the error appropriately (e.g., send an error response)
+  }
 
   // Construct user response object
   const userResponse = {
@@ -260,5 +280,5 @@ module.exports = {
   updatePassword,
   forgotPassword,
   resetPassword,
-  loginuser,
+  loginUser,
 };
