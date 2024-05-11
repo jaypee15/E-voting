@@ -2,7 +2,7 @@ const { Schema, model } = require("mongoose");
 
 const votingRoomSchema = new Schema(
   {
-    name: { type: String, required: true, trim: true, unique: true, minLength: 5, maxLength:30 },
+    name: { type: String, required: true, trim: true, unique: true, minLength: 5, maxLength:50 },
     admin: {
       type: Schema.Types.ObjectId,
       ref: "Admin",
@@ -10,7 +10,7 @@ const votingRoomSchema = new Schema(
     },
     contestants: [
       {
-        type: mongoose.Schema.Types.ObjectId,
+        type: Schema.Types.ObjectId,
         ref: "Contestant",
         required: true,
       },

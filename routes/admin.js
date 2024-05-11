@@ -11,25 +11,34 @@ const {
   resetPassword,
   loginUser,
 } = require("../controllers/admin");
+
 const validate = require("../middlewares/validator");
 const protect = require("../middlewares/protect");
 
 const router = express.Router();
 
-router
-  .route("/")
-  .get(protect, getAllusers)
-  .post(validate("register"), createUser);
-router
-  .route("/:id")
-  .get(protect, getUserById)
-  .patch(protect, validate("update"), updateUser)
-  .delete(protect, deleteUser);
+// Register route
+router.post("/", validate("register"), createUser);
+
+// Login route
 router.post("/login", validate("login"), loginUser);
+
+// Password reset route
 router.post("/password-reset", resetPassword);
-router
-  .route("/password/:id")
-  .post(forgotPassword, protect)
-  .patch(updatePassword, protect);
+
+// Protected routes (require authentication)
+router.use(protect);
+
+// User management routes
+router.get("/", getAllusers);
+router.get("/:id", getUserById);
+router.patch("/:id", validate("update"), updateUser);
+router.delete("/:id", deleteUser);
+
+// Password update route
+router.patch("/password/:id", updatePassword);
+
+// Forgot password route
+router.post("/password/:id", forgotPassword);
 
 module.exports = router;

@@ -1,11 +1,30 @@
-const express = require('express');
-const router = express.Router();
-const votingRoomController = require('../controllers/votingRoomController');
+const express = require("express");
+const randomstring = require("randomstring");
 
-router.post('/voting-rooms', votingRoomController.createVotingRoom);
-router.get('/voting-rooms', votingRoomController.getAllVotingRooms);
-router.get('/voting-rooms/:id', votingRoomController.getVotingRoomById);
-router.put('/voting-rooms/:id', votingRoomController.updateVotingRoom);
-router.delete('/voting-rooms/:id', votingRoomController.deleteVotingRoom);
+const protect = require("../middlewares/protect");
+const validate = require("../middlewares/validator");
+
+const {
+  createVotingRoom,
+  getAllVotingRooms,
+  getVotingRoomById,
+  updateVotingRoom,
+  deleteVotingRoom,
+} = require("../controllers/voting-room");
+
+const router = express.Router();
+
+// Protected routes (require authentication)
+router.use(protect);
+
+router.post("/voting-rooms", validate("createVotingRoom"), createVotingRoom);
+router.get("/voting-rooms", getAllVotingRooms);
+router.get("/voting-rooms/:id", getVotingRoomById);
+router.patch(
+  "/voting-rooms/:id",
+  validate("updateVotingRoom"),
+  updateVotingRoom
+);
+router.delete("/voting-rooms/:id", deleteVotingRoom);
 
 module.exports = router;

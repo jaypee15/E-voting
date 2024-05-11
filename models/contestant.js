@@ -1,13 +1,12 @@
 const { Schema, model } = require("mongoose");
 
-const contestantSchema = new mongoose.Schema({
+const contestantSchema = new Schema({
   name: { type: String, required: true },
   image: { type: String }, 
-  username: { type: String, unique: true, required: true },
+  username: { type: String, required: true },
   votingRoom: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: Schema.Types.ObjectId,
     ref: "VotingRoom",
-    required: true,
   },
 
 });

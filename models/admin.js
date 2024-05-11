@@ -15,6 +15,13 @@ const adminSchema = new Schema(
     accountNumber: { type: String, required: true },
     accountBank: { type: String, required: true },
 
+    // role: {
+    //   type: String,
+    //   enum: ["admin", "superadmin"],
+    //   default: "admin",
+    // },
+
+
     votingRooms: [{ type: Schema.Types.ObjectId, ref: "VotingRoom" }],
 
     password: {

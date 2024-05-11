@@ -35,7 +35,6 @@ const createUser = asyncHandler(async (req, res, next) => {
     expiresIn: EXPIRES_IN,
   });
 
-  console.log(user)
 
   const oneDay = 1000 * 60 * 60 * 24;
   const longerExp = 1000 * 60 * 60 * 24 * 30;
@@ -119,7 +118,9 @@ const getAllusers = asyncHandler(async (req, res, next) => {
 // Get a single user
 const getUserById = asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
+  cosole.log(userId)
   const user = req.user;
+  console.log(user)
 
   if (user._id != userId) {
     return next(
