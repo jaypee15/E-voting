@@ -3,7 +3,7 @@ require("dotenv").config();
 const asyncHandler = require("express-async-handler");
 const randomstring = require("randomstring");
 
-const VotingRoom = require("../models/Voting-room");
+const VotingRoom = require("../models/voting-room");
 const Contestant = require("../models/contestant");
 const ErrorObject = require("../utils/error");
 
@@ -16,9 +16,9 @@ const createVotingRoom = asyncHandler(async (req, res, next) => {
     return next(new ErrorObject("A room with that name already exists", 400));
   }
 
-  const path = req.originalUrl
+  const path = req.baseUrl
   try {
-    const link = `${process.env.BASE_URL}${path}/${randomstring.generate({
+    const link = `${process.env.BASE_URL}/vote/${randomstring.generate({
       length: 10,
       charset: "alphanumeric",
       capitalization: "lowercase",
@@ -65,9 +65,6 @@ const getAllVotingRooms = asyncHandler(async (req, res, next) => {
   res.status(200).json(votingRooms);
 });
 
-const getVotingRoom = asyncHandler(async (req, res, next) => {
-  console.log(req.params)
-});
 
 const getVotingRoomById = async (req, res, next) => {
   const votingRoom = await VotingRoom.findById(req.params.id);
@@ -100,10 +97,11 @@ const updateVotingRoom = async (req, res, next) => {
 const deleteVotingRoom = async (req, res, next) => {
   const votingRoom = await VotingRoom.findById(req.params.id);
   if (!votingRoom) {
-    next(new ErrorObject("Voting room not found", 404));
+    return next(new ErrorObject("Voting room not found", 404));
   }
+
   if (votingRoom.admin.toString() !== req.user.userId) {
-    next(
+    return next(
       new ErrorObject("You are not authorized to modify this voting room", 401)
     );
   }
