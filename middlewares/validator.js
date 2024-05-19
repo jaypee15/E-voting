@@ -4,7 +4,7 @@ const Validators = require("../validators");
 const ErrorObject = require("../utils/error");
 
 module.exports = function (validator) {
-  console.log("from validator middleware:", validator);
+  // console.log("from validator middleware:", validator);
 
   return async function (req, res, next) {
     try {

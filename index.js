@@ -17,7 +17,6 @@ app.use("/api/users", userRoutes);
 app.use("/api/votes", votesRoutes);
 app.use("/api/vote", voteRoutes);
 app.use("*", (req, res, next) => {
-  console.log(`route ${req.originalUrl} not found`);
   res.status(404).json({ message: " route not found" });
 });
 

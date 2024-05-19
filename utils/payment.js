@@ -1,34 +1,46 @@
-const { v4: uuidv4 } = require('uuid');
-uuidv4(); // ⇨ '1b9d6bcd-bbfd-4b2d-9b5d-ab8dfbbd4bed'
+require("dotenv").config();
 
+const { v4: uuidv4 } = require("uuid");
 const got = require("got");
+const asyncHandler = require("express-async-handler");
+const Transaction = require("../models/transaction");
 
-try {
-    const response = await got.post("https://api.flutterwave.com/v3/payments", {
+const makePayment = asyncHandler(async (options) => {
+  const tx_ref = uuidv4();
+  const { amount, contestantId, votingRoomId, res, redirectUrl} =
+    options;
+  try {
+    const transaction = await Transaction.create({
+      amount,
+      tx_ref,
+      contestantId,
+      votingRoomId,
+    });
+    const response = await got
+      .post("https://api.flutterwave.com/v3/payments", {
         headers: {
-            Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`
+          Authorization: `Bearer ${process.env.FLW_SECRET_KEY}`,
         },
         json: {
-            tx_ref: "hooli-tx-1920bbtytty",
-            amount: "100",
-            currency: "NGN",
-            redirect_url: "https://webhook.site/9d0b00ba-9a69-44fa-a43d-a82c33c36fdc",
-            meta: {
-                consumer_id: 23,
-                consumer_mac: "92a3-912ba-1192a"
-            },
-            customer: {
-                email: "user@gmail.com",
-                phonenumber: "080****4528",
-                name: "Yemi Desola"
-            },
-            customizations: {
-                title: "Pied Piper Payments",
-                logo: "http://www.piedpiper.com/app/themes/joystick-v27/images/logo.png"
-            }
-        }
-    }).json();
-} catch (err) {
-    console.log(err.code);
-    console.log(err.response.body);
-}
+          tx_ref,
+          amount: amount,
+          currency: "NGN",
+          redirect_url: redirectUrl,
+          customer: {
+            email: "voter@gmail.com",
+          },
+        },
+      })
+      .json();
+
+    res
+      .status(200)
+      .json({ "follow this link to make your payment": response.data.link });
+  } catch (err) {
+    // console.log(err.code);
+    // console.log(err.response.body);
+    console.log(err);
+  }
+});
+
+module.exports = makePayment;

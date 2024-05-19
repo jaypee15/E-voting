@@ -1,7 +1,7 @@
 require("dotenv").config();
 
 const asyncHandler = require("express-async-handler");
-const randomstring = require("randomstring");
+const { v4: uuidv4 } = require("uuid");
 
 const VotingRoom = require("../models/voting-room");
 const Contestant = require("../models/contestant");
@@ -16,13 +16,18 @@ const createVotingRoom = asyncHandler(async (req, res, next) => {
     return next(new ErrorObject("A room with that name already exists", 400));
   }
 
-  const path = req.baseUrl
   try {
-    const link = `${process.env.BASE_URL}/vote/${randomstring.generate({
-      length: 10,
-      charset: "alphanumeric",
-      capitalization: "lowercase",
-    })}`;
+    const link = `${process.env.BASE_URL}/vote/${uuidv4()}`;
+
+    
+    const votingRoom = await VotingRoom.create({
+      name,
+      contestants: null,
+      startDate,
+      endDate,
+      votingLink: link,
+      admin: adminId,
+    });
 
     const contestantIds = [];
     for (const contestant of contestants) {
@@ -30,26 +35,15 @@ const createVotingRoom = asyncHandler(async (req, res, next) => {
         name: contestant.name,
         image: contestant.image,
         username: contestant.username,
-        votingRoom: null,
+        votingRoom: votingRoom._id,
       });
       contestantIds.push(newContestant._id);
     }
 
-    const votingRoom = await VotingRoom.create({
-      name,
-      contestants: contestantIds,
-      startDate,
-      endDate,
-      votingLink: link,
-      admin: adminId,
-    });
+  
 
-    await Promise.all(
-      contestantIds.map((id) =>
-        Contestant.findByIdAndUpdate(id, { votingRoom: votingRoom._id })
-      )
-    );
-
+    await VotingRoom.findByIdAndUpdate(votingRoom._id, {contestants: contestantIds})
+    
     res.status(201).json({
       message: "Voting room created successfully",
       votingLink: link,
@@ -69,7 +63,7 @@ const getAllVotingRooms = asyncHandler(async (req, res, next) => {
 const getVotingRoomById = async (req, res, next) => {
   const votingRoom = await VotingRoom.findById(req.params.id);
   if (!votingRoom) {
-    next(new ErrorObject("voting room not found", 404));
+    return next(new ErrorObject("voting room not found", 404));
   }
   res.status(200).json(votingRoom);
 };
@@ -78,10 +72,10 @@ const updateVotingRoom = async (req, res, next) => {
   // make a service
   const votingRoom = await VotingRoom.findById(req.params.id);
   if (!votingRoom) {
-    next(new ErrorObject("Voting room not found", 404));
+    return next(new ErrorObject("Voting room not found", 404));
   }
   if (votingRoom.admin.toString() !== req.user.userId) {
-    next(
+    return next(
       new ErrorObject("You are not authorized to modify this voting room", 401)
     );
   }

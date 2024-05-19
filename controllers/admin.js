@@ -63,19 +63,17 @@ const createUser = asyncHandler(async (req, res, next) => {
 
 const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
+  console.log(req.body)
 
-  if (!email || !password) {
-    next(new ErrorObject("Please provide email and password", 400));
-  }
-
-  const user = await Admin.findOne(email).select("+password");
+  const user = await Admin.findOne({email}).select("+password");
+  console.log(user)
   if (!user) {
     return next(new ErrorObject("Invalid Credentials", 400));
   }
 
   const isPasswordValid = await bcrypt.compare(password, user.password);
   if (!isPasswordValid) {
-    next(new ErrorObject("Invalid Credentials", 400));
+    return next(new ErrorObject("Invalid Credentials", 400));
   }
 
   // TODO: make a service
@@ -120,7 +118,6 @@ const getUserById = asyncHandler(async (req, res, next) => {
   const { userId } = req.params;
   cosole.log(userId)
   const user = req.user;
-  console.log(user)
 
   if (user._id != userId) {
     return next(
@@ -140,12 +137,12 @@ const updateUser = asyncHandler(async (req, res, next) => {
 
   const loggedInuserId = req.user.userId;
   if (loggedInuserId !== userId) {
-    next(new ErrorObject("You are not allowed to access this user", 401));
+    return next(new ErrorObject("You are not allowed to access this user", 401));
   }
   let user = await Admin.findById(userId);
 
   if (!user) {
-    next(new ErrorObject("User not Found", 404));
+    return next(new ErrorObject("User not Found", 404));
   }
 
   user.username = username || user.username;
