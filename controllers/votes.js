@@ -33,16 +33,15 @@ const viewRoom = asyncHandler(async (req, res, next) => {
   res.status(200).json({ status: "success", contestants });
 });
 
-
 const vote = asyncHandler(async (req, res, next) => {
   // get voting room from contestant id
 
   const { contestantId } = req.params;
-  const {numVotes} = req.body;
+  const { numVotes } = req.body;
 
   const redirectUrl = `${process.env.BASE_URL}/vote/payments/${contestantId}`;
   if (!numVotes) {
-    return next(new ErrorObject("Number of votes id required", 400));
+    return next(new ErrorObject("Number of votes required", 400));
   }
 
   if (!contestantId) {
@@ -80,29 +79,28 @@ const vote = asyncHandler(async (req, res, next) => {
     redirectUrl,
     contestantId,
     votingRoomId: votingRoom._id,
-  }
+  };
 
   const payment = makePayment(options);
-  
 });
 
 const confirmPayment = asyncHandler(async (req, res, next) => {
-  const {contestantId} = req.params;
-  const {tx_ref} = req.query;
-  
+  const { contestantId } = req.params;
+  const { tx_ref } = req.query;
+
   if (req.query.status === "successful") {
-    const transactionDetails = await Transaction.findOne({tx_ref});
+    const transactionDetails = await Transaction.findOne({ tx_ref });
     if (transactionDetails.isUsed === true) {
-      return res.status(400).json({message: "Transaction already used"})
+      return res.status(400).json({ message: "Transaction already used" });
     }
     const response = await flw.Transaction.verify({
       id: req.query.transaction_id,
     });
     if (
       response.data.status === "successful" &&
+      response.data.amount === transactionDetails.amount &&
       response.data.currency === "NGN"
-    )
-     {
+    ) {
       // Success! Confirm the customer's payment and increment
       const votingRoom = await VotingRoom.findOne({
         contestants: contestantId,
@@ -112,26 +110,23 @@ const confirmPayment = asyncHandler(async (req, res, next) => {
           new ErrorObject("Voting room not found for the given contestant", 404)
         );
       }
-      
+
       const contestant = votingRoom.contestants.find(
         (contestant) => contestant._id.toString() === contestantId
       );
-    
+
       if (!contestant) {
         return next(new ErrorObject("Contestant not found", 404));
       }
 
-      // TODO: conditional increment of vote count
-    
-      // const amountPaid = response.data.amount;
-      // 
-      contestant.votes += 1;
+      const amountPaid = response.data.amount;
+      const increment = Math.floor(amountPaid / 50);
+      contestant.votes += increment;
       await contestant.save();
-      transactionDetails.isUsed=true;
-      transactionDetails.status=true
+      transactionDetails.isUsed = true;
+      transactionDetails.status = true;
       await transactionDetails.save();
 
-    
       res.status(201).json({ status: "voted succesfully", contestant });
     } else {
       // Inform the customer their payment was unsuccessful

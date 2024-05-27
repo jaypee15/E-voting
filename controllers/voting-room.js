@@ -2,10 +2,29 @@ require("dotenv").config();
 
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
+const uploadImage = require("../utils/upload-image");
+const multer = require("multer");
 
 const VotingRoom = require("../models/voting-room");
 const Contestant = require("../models/contestant");
 const ErrorObject = require("../utils/error");
+
+
+const storage = multer.diskStorage({});
+const multerFilter = (req, file, cb) => {
+  if (file.mimetype.startsWith("image")) {
+    cb(null, true);
+  } else {
+    cb(new BadRequestError("Please upload an image file"), false);
+  }
+};
+const upload = multer({
+  storage,
+  fileFilter: multerFilter,
+});
+
+const uploadAvatar = upload.single("avatar");
+
 
 const createVotingRoom = asyncHandler(async (req, res, next) => {
   const { name, contestants, startDate, endDate } = req.body;
@@ -29,11 +48,25 @@ const createVotingRoom = asyncHandler(async (req, res, next) => {
       admin: adminId,
     });
 
+    let avatar = ""
+
+  if (req.file) {
+    try {
+      const image = { url: req.file.path, id: req.file.filename };
+      const result = await uploadImage(image);
+      avatar = result.secure_url;
+      console.log(avatar);
+    } catch (error) {
+      return res.status(500).json({ message: "Failed to upload Image" });
+    }
+  }
+
+
     const contestantIds = [];
     for (const contestant of contestants) {
       const newContestant = await Contestant.create({
         name: contestant.name,
-        image: contestant.image,
+        image: avatar,
         username: contestant.username,
         votingRoom: votingRoom._id,
       });
@@ -111,4 +144,5 @@ module.exports = {
   getVotingRoomById,
   updateVotingRoom,
   deleteVotingRoom,
+  uploadAvatar,
 };

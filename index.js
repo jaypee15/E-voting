@@ -1,5 +1,9 @@
 // load dependencies
 const express = require("express");
+const morgan = require("morgan");
+const fs = require("fs");
+const path = require("path");
+
 const cookieParser = require("cookie-parser");
 
 const ErrorHandler = require("./middlewares/error-handler");
@@ -8,9 +12,16 @@ const votesRoutes = require("./routes/voting-room");
 const voteRoutes = require("./routes/votes");
 
 const app = express();
+const accessLogStream = fs.createWriteStream(
+  path.join(__dirname, "access.log"),
+  { flags: "a" }
+);
 
 app.use(express.json());
 app.use(cookieParser());
+
+// setup the logger
+app.use(morgan("combined", { stream: accessLogStream }));
 
 //Routes
 app.use("/api/users", userRoutes);
