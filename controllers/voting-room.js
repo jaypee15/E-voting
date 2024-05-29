@@ -23,7 +23,7 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 
-const uploadAvatar = upload.single("avatar");
+const uploadAvatar = upload.array("avatar", 10);
 
 
 const createVotingRoom = asyncHandler(async (req, res, next) => {
@@ -62,16 +62,27 @@ const createVotingRoom = asyncHandler(async (req, res, next) => {
   }
 
 
-    const contestantIds = [];
-    for (const contestant of contestants) {
-      const newContestant = await Contestant.create({
-        name: contestant.name,
-        image: avatar,
-        username: contestant.username,
-        votingRoom: votingRoom._id,
-      });
-      contestantIds.push(newContestant._id);
+  const contestantIds = [];
+  for (let i = 0; i < contestants.length; i++) {
+    let avatar = '';
+    if (req.files[i]) {
+      try {
+        const image = { url: req.files[i].path, id: req.files[i].filename };
+        const result = await uploadImage(image);
+        avatar = result.secure_url;
+        console.log(avatar);
+      } catch (error) {
+        return res.status(500).json({ message: 'Failed to upload Image' });
+      }
     }
+    const newContestant = await Contestant.create({
+      name: contestants[i].name,
+      image: avatar,
+      username: contestants[i].username,
+      votingRoom: votingRoom._id,
+    });
+    contestantIds.push(newContestant._id);
+  }
 
   
 
