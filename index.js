@@ -12,16 +12,17 @@ const votesRoutes = require("./routes/voting-room");
 const voteRoutes = require("./routes/votes");
 
 const app = express();
-const accessLogStream = fs.createWriteStream(
-  path.join(__dirname, "access.log"),
-  { flags: "a" }
-);
+// const accessLogStream = fs.createWriteStream(
+//   path.join(__dirname, "access.log"),
+//   { flags: "a" }
+// );
 
 app.use(express.json());
 app.use(cookieParser());
 
 // setup the logger
-app.use(morgan("combined", { stream: accessLogStream }));
+// app.use(morgan("combined", { stream: accessLogStream }));
+app.use(morgan("combined"))
 
 //Routes
 app.use("/api/users", userRoutes);
