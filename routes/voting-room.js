@@ -9,15 +9,16 @@ const {
   getVotingRoomById,
   updateVotingRoom,
   deleteVotingRoom,
-  uploadAvatar
+  uploadFiles
 } = require("../controllers/voting-room");
+
 
 const router = express.Router();
 
 // Protected routes (require authentication)
 router.use(protect);
 
-router.post("/voting-rooms",uploadAvatar, validate("createVotingRoom"), createVotingRoom);
+router.post("/voting-rooms", uploadFiles, createVotingRoom);
 router.get("/voting-rooms", getAllVotingRooms);
 router.get("/voting-rooms/:id", getVotingRoomById);
 router.patch(

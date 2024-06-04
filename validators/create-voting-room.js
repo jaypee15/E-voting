@@ -1,16 +1,15 @@
-const Joi = require("joi");
+const Joi = require('joi');
 
-const contestantSchema = Joi.object({
+const schema = Joi.object({
   name: Joi.string().required(),
-  image: Joi.string(),
-  username: Joi.string().required(),
+  contestants: Joi.array().items(
+    Joi.object({
+      name: Joi.string().required(),
+      username: Joi.string().alphanum().required()
+    })
+  ),
+  startDate: Joi.date().iso().required(),
+  endDate: Joi.date().iso().required()
 });
 
-const votingRoomSchema = Joi.object({
-  name: Joi.string().required().trim().min(5).max(50),
-  contestants: Joi.array().items(contestantSchema).required(),
-  startDate: Joi.date().min("now").required(),
-  endDate: Joi.date().greater(Joi.ref("startDate")).required(),
-});
-
-module.exports = votingRoomSchema;
+module.exports = schema;

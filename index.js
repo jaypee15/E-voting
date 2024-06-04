@@ -18,8 +18,8 @@ const app = express();
 // );
 
 app.use(express.json());
+app.use(express.urlencoded({ extended: true }));
 app.use(cookieParser());
-
 // setup the logger
 // app.use(morgan("combined", { stream: accessLogStream }));
 app.use(morgan("combined"))

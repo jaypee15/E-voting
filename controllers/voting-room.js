@@ -1,13 +1,11 @@
 require("dotenv").config();
-
 const asyncHandler = require("express-async-handler");
 const { v4: uuidv4 } = require("uuid");
 const uploadImage = require("../utils/upload-image");
-const multer = require("multer");
-
 const VotingRoom = require("../models/voting-room");
 const Contestant = require("../models/contestant");
 const ErrorObject = require("../utils/error");
+const multer = require("multer");
 
 
 const storage = multer.diskStorage({});
@@ -15,7 +13,7 @@ const multerFilter = (req, file, cb) => {
   if (file.mimetype.startsWith("image")) {
     cb(null, true);
   } else {
-    cb(new BadRequestError("Please upload an image file"), false);
+    cb(new ErrorObject("Please upload an image file", 400), false);
   }
 };
 const upload = multer({
@@ -23,12 +21,27 @@ const upload = multer({
   fileFilter: multerFilter,
 });
 
-const uploadAvatar = upload.array("avatar", 10);
-
+const uploadFiles = upload.any();
 
 const createVotingRoom = asyncHandler(async (req, res, next) => {
-  const { name, contestants, startDate, endDate } = req.body;
+  console.log("controller");
+  const { name, startDate, endDate } = req.body;
   const adminId = req.user.userId;
+
+  // Extract contestants from req.body
+  const contestants = [];
+  const contestantKeys = Object.keys(req.body).filter(key => key.startsWith('contestants'));
+
+  contestantKeys.forEach(key => {
+    const [, index, field] = key.match(/contestants\[(\d+)]\.(\w+)/);
+    if (!contestants[index]) {
+      contestants[index] = {};
+    }
+    contestants[index][field] = req.body[key];
+  });
+
+  console.log("req.files", req.files);
+  console.log("contestants", contestants);
 
   const nameAlreadyExists = await VotingRoom.findOne({ name });
   if (nameAlreadyExists) {
@@ -38,82 +51,75 @@ const createVotingRoom = asyncHandler(async (req, res, next) => {
   try {
     const link = `${process.env.BASE_URL}/vote/${uuidv4()}`;
 
-    
     const votingRoom = await VotingRoom.create({
       name,
-      contestants: null,
+      contestants: [],
       startDate,
       endDate,
       votingLink: link,
       admin: adminId,
     });
 
-    let avatar = ""
+    const contestantIds = [];
+    const uploadedFiles = req.files || [];
 
-  if (req.file) {
-    try {
-      const image = { url: req.file.path, id: req.file.filename };
-      const result = await uploadImage(image);
-      avatar = result.secure_url;
-      console.log(avatar);
-    } catch (error) {
-      return res.status(500).json({ message: "Failed to upload Image" });
-    }
-  }
+    for (let i = 0; i < contestants.length; i++) {
+      let avatar = "";
+      const file = uploadedFiles.find(f => f.fieldname === `contestants[${i}].avatar`);
 
-
-  const contestantIds = [];
-  for (let i = 0; i < contestants.length; i++) {
-    let avatar = '';
-    if (req.files[i]) {
-      try {
-        const image = { url: req.files[i].path, id: req.files[i].filename };
-        const result = await uploadImage(image);
-        avatar = result.secure_url;
-        console.log(avatar);
-      } catch (error) {
-        return res.status(500).json({ message: 'Failed to upload Image' });
+      if (file) {
+        try {
+          const image = {
+            url: file.path,
+            id: file.filename,
+          };
+          const result = await uploadImage(image);
+          avatar = result.secure_url;
+        } catch (error) {
+          return res.status(500).json({ message: "Failed to upload Image" });
+        }
       }
+
+      const newContestant = await Contestant.create({
+        name: contestants[i].name,
+        image: avatar,
+        username: contestants[i].username,
+        votingRoom: votingRoom._id,
+      });
+      contestantIds.push(newContestant._id);
     }
-    const newContestant = await Contestant.create({
-      name: contestants[i].name,
-      image: avatar,
-      username: contestants[i].username,
-      votingRoom: votingRoom._id,
+
+    await VotingRoom.findByIdAndUpdate(votingRoom._id, {
+      contestants: contestantIds,
     });
-    contestantIds.push(newContestant._id);
-  }
 
-  
-
-    await VotingRoom.findByIdAndUpdate(votingRoom._id, {contestants: contestantIds})
-    
     res.status(201).json({
       message: "Voting room created successfully",
       votingLink: link,
     });
   } catch (error) {
-    next(new ErrorObject(error));
+    next(new ErrorObject(error.message, 500));
   }
 });
 
+module.exports = {
+  createVotingRoom,
+};
+
 const getAllVotingRooms = asyncHandler(async (req, res, next) => {
-  // TODO: restrict to superdamin
   const votingRooms = await VotingRoom.find();
   res.status(200).json(votingRooms);
 });
 
-
-const getVotingRoomById = async (req, res, next) => {
+const getVotingRoomById = asyncHandler(async (req, res, next) => {
   const votingRoom = await VotingRoom.findById(req.params.id);
   if (!votingRoom) {
     return next(new ErrorObject("voting room not found", 404));
   }
   res.status(200).json(votingRoom);
-};
+});
 
-const updateVotingRoom = async (req, res, next) => {
-  // make a service
+const updateVotingRoom = asyncHandler(async (req, res, next) => {
   const votingRoom = await VotingRoom.findById(req.params.id);
   if (!votingRoom) {
     return next(new ErrorObject("Voting room not found", 404));
@@ -130,9 +136,9 @@ const updateVotingRoom = async (req, res, next) => {
     { new: true }
   );
   res.status(200).json(updatedVotingRoom);
-};
+});
 
-const deleteVotingRoom = async (req, res, next) => {
+const deleteVotingRoom = asyncHandler(async (req, res, next) => {
   const votingRoom = await VotingRoom.findById(req.params.id);
   if (!votingRoom) {
     return next(new ErrorObject("Voting room not found", 404));
@@ -147,7 +153,7 @@ const deleteVotingRoom = async (req, res, next) => {
   await VotingRoom.findByIdAndDelete(req.params.id);
 
   res.status(200).json({ message: "Voting room deleted successfully" });
-};
+});
 
 module.exports = {
   createVotingRoom,
@@ -155,5 +161,5 @@ module.exports = {
   getVotingRoomById,
   updateVotingRoom,
   deleteVotingRoom,
-  uploadAvatar,
+  uploadFiles,
 };

@@ -63,10 +63,9 @@ const createUser = asyncHandler(async (req, res, next) => {
 
 const loginUser = asyncHandler(async (req, res, next) => {
   const { email, password } = req.body;
-  console.log(req.body)
+ 
 
   const user = await Admin.findOne({email}).select("+password");
-  console.log(user)
   if (!user) {
     return next(new ErrorObject("Invalid Credentials", 400));
   }
