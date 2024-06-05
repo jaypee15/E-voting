@@ -18,7 +18,7 @@ const router = express.Router();
 // Protected routes (require authentication)
 router.use(protect);
 
-router.post("/voting-rooms", uploadFiles, createVotingRoom);
+router.post("/voting-rooms", uploadFiles, validate("createVotingRoom"), createVotingRoom);
 router.get("/voting-rooms", getAllVotingRooms);
 router.get("/voting-rooms/:id", getVotingRoomById);
 router.patch(

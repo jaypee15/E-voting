@@ -30,7 +30,7 @@ const viewRoom = asyncHandler(async (req, res, next) => {
   }));
 
   // return the contestants from the votingrooms
-  res.status(200).json({ status: "success", contestants });
+  res.status(200).json({ status: "success", Room: votingRoom.name, contestants });
 });
 
 const vote = asyncHandler(async (req, res, next) => {

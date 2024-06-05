@@ -116,7 +116,7 @@ const getVotingRoomById = asyncHandler(async (req, res, next) => {
   if (!votingRoom) {
     return next(new ErrorObject("voting room not found", 404));
   }
-  res.status(200).json(votingRoom);
+  res.status(200).json({"Room:": "", votingRoom});
 });
 
 const updateVotingRoom = asyncHandler(async (req, res, next) => {

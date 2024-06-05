@@ -16,7 +16,7 @@ const createUser = asyncHandler(async (req, res, next) => {
   const { email, password, accountName, accountNumber, accountBank } = req.body;
   
 
-  // TODO: make a service
+
   const emailAlreadyExists = await Admin.findOne({email});
   if (emailAlreadyExists) {
     return next(new ErrorObject("A user with this email already exists", 400));
@@ -30,7 +30,6 @@ const createUser = asyncHandler(async (req, res, next) => {
     accountBank,
   });
 
-  // TODO: make a service
   const token = jwt.sign({ userId: user._id }, SECRET, {
     expiresIn: EXPIRES_IN,
   });
@@ -75,7 +74,6 @@ const loginUser = asyncHandler(async (req, res, next) => {
     return next(new ErrorObject("Invalid Credentials", 400));
   }
 
-  // TODO: make a service
   const token = jwt.sign({ userId: user._id }, SECRET, {
     expiresIn: EXPIRES_IN,
   });
@@ -106,7 +104,6 @@ const loginUser = asyncHandler(async (req, res, next) => {
 
 // Get all users
 const getAllusers = asyncHandler(async (req, res, next) => {
-  // TODO: allow only superuser on this route
 
   const users = await Admin.find().select("-password");
   res.status(200).json(users);
